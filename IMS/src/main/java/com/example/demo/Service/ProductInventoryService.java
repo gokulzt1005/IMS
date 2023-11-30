@@ -2,6 +2,9 @@ package com.example.demo.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -30,13 +33,12 @@ public class ProductInventoryService {
 	
 	@Autowired
     private ProductInventoryRepository ProductRepository;
-
- 
-    public ProductInventoryEntity createQRCode(ProductInventoryEntity qrCodeEntity) {
+	
+	public ProductInventoryEntity createQRCode(ProductInventoryEntity qrCodeEntity) {
         return ProductRepository.save(qrCodeEntity);
     }
-
-    public byte[] generateQRCode(String content) throws WriterException, IOException {
+ 
+	public byte[] generateQRCode(String content) throws WriterException, IOException {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
         BitMatrix bitMatrix = qrCodeWriter.encode(content, BarcodeFormat.QR_CODE, 300, 300);
 
@@ -115,9 +117,9 @@ public class ProductInventoryService {
     private ProductInventoryEntity convertDtoToEntity(InProductDto inProductDto) {
         // Check if the required fields are missing in the input
         if (inProductDto.getProductId() == null ||
+        	inProductDto.getEmail() == null ||
             inProductDto.getProductName() == null ||
             inProductDto.getProductType() == null ||
-            inProductDto.getEmployeeName() == null ||
             inProductDto.getInDate() == null ||
             inProductDto.getDescription() == null ||
             inProductDto.getPrices() <= 0.0) {
@@ -126,19 +128,19 @@ public class ProductInventoryService {
         
         ProductInventoryEntity inProduct = new ProductInventoryEntity();
         inProduct.setProductId(inProductDto.getProductId());
+        inProduct.setEmail(inProductDto.getEmail());
         inProduct.setProductName(inProductDto.getProductName());
         inProduct.setProductType(inProductDto.getProductType());
         inProduct.setProcessorName(inProductDto.getProcessorName());
         inProduct.setSSDCapacity(inProductDto.getSSDCapacity());
         inProduct.setRam(inProductDto.getRam());
         inProduct.setExpandableMemory(inProductDto.getExpandableMemory());
-        inProduct.setEmployeeName(inProductDto.getEmployeeName());
         
         // Set the fixed value "in" for TransactionType
         inProduct.setTransactionType("in");
         
-        // Set other properties based on the input DTO
         inProduct.setInDate(inProductDto.getInDate());
+
         inProduct.setDescription(inProductDto.getDescription());
         inProduct.setTotalQuantity(1);
         inProduct.setPrices(inProductDto.getPrices());
@@ -154,7 +156,7 @@ public class ProductInventoryService {
         List<Map<String, Object>> dataList = new ArrayList<>();
 
         if (updatedProductDto.getOutDate() == null || updatedProductDto.getCustomerName() == null ||
-        		updatedProductDto.getTransactionType() == null) {
+        	updatedProductDto.getTransactionType() == null) {
             response.put("data", dataList);
             response.put("meta", createMeta(HttpStatus.BAD_REQUEST.value(), "Insert the values"));
             response.put("pagination", new LinkedHashMap<>());
@@ -180,10 +182,10 @@ public class ProductInventoryService {
         String requestedTransactionType = updatedProductDto.getTransactionType();
 
         // Customize transaction type based on your conditions
-        if ("sales".equalsIgnoreCase(requestedTransactionType)) {
-            outProduct.setTransactionType("out"); // Convert "sales" to "out"
-        } else if ("service".equalsIgnoreCase(requestedTransactionType)) {
-            outProduct.setTransactionType("service"); // Store "service" as is
+        if ("Sales".equalsIgnoreCase(requestedTransactionType)) {
+            outProduct.setTransactionType("Sales"); // Convert "sales" to "out"
+        } else if ("Service".equalsIgnoreCase(requestedTransactionType)) {
+            outProduct. setTransactionType("Service"); // Store "service" as is
         }
 
         outProduct.setCustomerName(updatedProductDto.getCustomerName());
@@ -224,9 +226,9 @@ public class ProductInventoryService {
 
     
     
-        public Map<String, Object> calculate() {
+        public Map<String, Object> calculate(String email) {
             Map<String, Object> response = new LinkedHashMap<>();
-            List<ProductInventoryEntity> products = ProductRepository.findAll();
+            List<ProductInventoryEntity> products = ProductRepository.findByEmail(email); 
 
             int totalExitQuantity = 0;
             int totalTotalQuantity = 0;
@@ -243,7 +245,7 @@ public class ProductInventoryService {
             List<Map<String, Object>> dataList = new ArrayList<>();
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("Total Quantity", totalTotalQuantity);
-            data.put("prices", totalPrices);
+            data.put("Prices", totalPrices);
             data.put("In Hand", saleQuantity);
             dataList.add(data);
 
@@ -259,9 +261,9 @@ public class ProductInventoryService {
         }
         
         
-        public Map<String, Object> getProductCounts(String productName) {
+        public Map<String, Object> getProductCounts(String productName,String email) {
             Map<String, Object> response = new LinkedHashMap<>();
-            List<ProductInventoryEntity> entities = ProductRepository.findByProductName(productName);
+            List<ProductInventoryEntity> entities = ProductRepository.findByProductNameAndEmail(productName,email);
 
             int totalCount = entities.size();
             int availableCount = (int) entities.stream().filter(entity -> !entity.isIsdeleted()).count();
@@ -291,8 +293,8 @@ public class ProductInventoryService {
         return ProductRepository.findByIsdeleted(false);
     }
 
-    public List<String> getProductTypesByProductName(String productName) {
-        List<ProductInventoryEntity> productEntities = ProductRepository.findByProductNameAndIsdeleted(productName, false);
+    public List<String> getProductTypesByProductName(String productName, String email) {
+        List<ProductInventoryEntity> productEntities = ProductRepository.findByProductNameAndEmailAndIsdeleted(productName, email, false);
         List<String> productTypes = new ArrayList<>();
 
         for (ProductInventoryEntity entity : productEntities) {
@@ -315,6 +317,12 @@ public class ProductInventoryService {
 		// TODO Auto-generated method stub
 		return ProductRepository.findAll();
 	}
+
+	public List<ProductInventoryEntity> getProductByProductTypeAndEmail(String productType, String email) {
+		// TODO Auto-generated method stub
+		return ProductRepository.findByProductTypeAndEmailAndIsdeleted(productType, email, false);
+	}
+
 	
 	
 

@@ -51,40 +51,6 @@ public class ImsController {
 	        return imsService.Customerlogin(userLoginDto);
 	    }
 	
-	@PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout(@RequestBody Map<String, String> requestData) {
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            String mobile = requestData.get("mobile");
-
-            if (mobile != null && !mobile.isEmpty()) {
-                boolean logoutSuccessful = imsService.performLogoutAction(mobile);
-
-                if (logoutSuccessful) {
-                    response.put("boolean", true);
-                    response.put("status_code", 200);
-                    response.put("message", "User logged out successfully");
-                    return ResponseEntity.ok(response);
-                } else {
-                    response.put("boolean", false);
-                    response.put("status_code", 401);
-                    response.put("message", "Logout failed");
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-                }
-            } else {
-                response.put("boolean", false);
-                response.put("status_code", 400);
-                response.put("message", "Invalid request data");
-                return ResponseEntity.badRequest().body(response);
-            }
-        } catch (Exception e) {
-            response.put("boolean", false);
-            response.put("status_code", 500);
-            response.put("message", "Internal server error");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }  
-    }
 	
 	@GetMapping("ims/{id}")
 	 public ResponseEntity<Map<String, Object>> getUserDataById(

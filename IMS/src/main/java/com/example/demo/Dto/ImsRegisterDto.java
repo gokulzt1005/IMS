@@ -7,6 +7,7 @@ public class ImsRegisterDto {
 	private String email;
 	private String mobile;
 	private String password;
+	private String confirmPassword;
 	
 	public String getUsername() {
 		return username;
@@ -32,6 +33,13 @@ public class ImsRegisterDto {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+	public String getConfirmPassword() {
+		return confirmPassword;
+	}
+	public void setConfirmPassword(String confirmPassword) {
+		this.confirmPassword = confirmPassword;
+	}
+	
 	
 	
 

@@ -8,6 +8,7 @@ import javax.persistence.Column;
 public class InProductDto {
 	
 	private String productId;
+	private String email;
 	private String productName;
 	private String productType;
 	private String employeeName;
@@ -17,7 +18,7 @@ public class InProductDto {
 	private String ram;
 	private String expandableMemory;
 	private String TransactionType;
-	private Date inDate;
+	private LocalDate inDate;
 	private String Description;
 	private int totalQuantity;
 	private double prices;
@@ -105,11 +106,11 @@ public class InProductDto {
 		TransactionType = transactionType;
 	}
 
-	public Date getInDate() {
+	public LocalDate getInDate() {
 		return inDate;
 	}
 
-	public void setInDate(Date inDate) {
+	public void setInDate(LocalDate inDate) {
 		this.inDate = inDate;
 	}
 
@@ -136,6 +137,15 @@ public class InProductDto {
 	public void setPrices(double prices) {
 		this.prices = prices;
 	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	
 	
 
 

@@ -54,15 +54,15 @@ public class ProductInventoryController {
 	}
 	
 	
-	@GetMapping("/total_qnty")
-	public ResponseEntity<Map<String, Object>> calculate() {
-        try {
-            Map<String, Object> summary = ProductService.calculate();
-            return ResponseEntity.ok(summary);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
+	@GetMapping("/total_qnty/{email}")
+	public ResponseEntity<Map<String, Object>> calculate(@PathVariable String email) {
+	    try {
+	        Map<String, Object> summary = ProductService.calculate(email);
+	        return ResponseEntity.ok(summary);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+	    }
+	}
 	
 		@PostMapping("/add")
 	    public ResponseEntity<Map<String, Object>> addProduct(@RequestBody InProductDto inProductDto) {
@@ -111,10 +111,11 @@ public class ProductInventoryController {
 		}
 
 	    
-	    @GetMapping("/product/{productName}")
-	    public ResponseEntity<Map<String, Object>> getProductTypesByProductName(@PathVariable String productName) {
+	    @GetMapping("/product/{productName}/{email}")
+	    public ResponseEntity<Map<String, Object>> getProductTypesByProductName(
+	            @PathVariable String productName, @PathVariable String email) {
 	        try {
-	            List<String> productTypes = ProductService.getProductTypesByProductName(productName);
+	            List<String> productTypes = ProductService.getProductTypesByProductName(productName, email);
 
 	            if (productTypes.isEmpty()) {
 	                return ResponseEntity.notFound().build();
@@ -140,7 +141,7 @@ public class ProductInventoryController {
 	            response.put("data", data);
 	            response.put("meta", meta);
 	            response.put("pagination", new LinkedHashMap<>());
-	            
+
 	            return ResponseEntity.ok(response);
 	        } catch (Exception e) {
 	            Map<String, Object> errorResponse = new LinkedHashMap<>();
@@ -178,9 +179,9 @@ public class ProductInventoryController {
 	    }
 	    
 	    @GetMapping("/total")
-	    public ResponseEntity<Map<String, Object>> getProductCounts(@RequestParam String productName) {
+	    public ResponseEntity<Map<String, Object>> getProductCounts(@RequestParam String productName,@RequestParam String email) {
 	        try {
-	            Map<String, Object> response = ProductService.getProductCounts(productName);
+	            Map<String, Object> response = ProductService.getProductCounts(productName,email);
 	            return ResponseEntity.ok(response);
 	        } catch (Exception e) {
 	            Map<String, Object> errorResponse = new LinkedHashMap<>();
@@ -196,10 +197,11 @@ public class ProductInventoryController {
 	    }
 
 	    
-	    @GetMapping("/get/{productType}")
-	    public ResponseEntity<Map<String, Object>> getProductInfoByProductType(@PathVariable String productType) {
+	    @GetMapping("/get/{productType}/{email}")
+	    public ResponseEntity<Map<String, Object>> getProductInfoByProductTypeAndEmail(
+	            @PathVariable String productType, @PathVariable String email) {
 	        try {
-	            List<ProductInventoryEntity> productEntities = ProductService.getProductTypeAndIsdeleted(productType);
+	            List<ProductInventoryEntity> productEntities = ProductService.getProductByProductTypeAndEmail(productType, email);
 
 	            if (productEntities.isEmpty()) {
 	                return ResponseEntity.notFound().build();
@@ -243,6 +245,7 @@ public class ProductInventoryController {
 	                    .body(errorResponse);
 	        }
 	    }
+	
    
 	    @GetMapping("/getall")
 	    public List<ProductInventoryEntity> allProduct(ProductInventoryEntity inProductDto) {

@@ -18,10 +18,14 @@ public interface ProductInventoryRepository extends JpaRepository<ProductInvento
 	List<ProductInventoryEntity> findByProductNameAndIsdeleted(String productName, boolean isdeleted);
 	List<ProductInventoryEntity> findByProductTypeAndIsdeleted(String productType, boolean isdeleted);
 	
-	@Query("SELECT p FROM ProductInventoryEntity p WHERE YEAR(p.outDate) = :year AND MONTH(p.outDate) = :month")
-    List<ProductInventoryEntity> findByYearAndMonth(@Param("year") int year, @Param("month") int month);
+	@Query("SELECT p FROM ProductInventoryEntity p WHERE YEAR(p.outDate) = :year AND MONTH(p.outDate) = :month AND p.email = :email")
+	List<ProductInventoryEntity> findByYearAndMonthAndEmail(@Param("year") int year, @Param("month") int month, @Param("email") String email);
 	List<ProductInventoryEntity> findByProductName(String productName);
-	
+	List<ProductInventoryEntity> findByProductTypeAndEmailAndIsdeleted(String productType, String email, boolean isdeleted);
+	List<ProductInventoryEntity> findByEmail(String email);
+	List<ProductInventoryEntity> findByProductNameAndEmailAndIsdeleted(String productName, String email, boolean b);
+	List<ProductInventoryEntity> findByProductNameAndEmail(String productName, String email);
+
 	
 
 }

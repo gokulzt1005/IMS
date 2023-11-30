@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.crypto.SecretKey;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +18,15 @@ import org.springframework.stereotype.Service;
 import com.example.demo.Dto.ImsRegisterDto;
 import com.example.demo.Dto.ImsLoginDto;
 import com.example.demo.Entity.ImsEntity;
+import com.example.demo.Model.User;
 import com.example.demo.Repository.ImsRepository;
+import com.example.demo.Utils.EmailMessageService;
+import com.example.demo.Utils.JwtSecretKeyProvider;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+
 
 @Service
 public class ImsService {
@@ -27,8 +37,11 @@ public class ImsService {
 	@Autowired
     private PasswordEncoder passwordEncoder;
 	
-//	@Autowired
-//    private EmailService emailService;
+	@Autowired
+    private JwtSecretKeyProvider secretKeyProvider;
+	
+	@Autowired
+    private EmailMessageService emailService;
 	
     
     
@@ -80,11 +93,13 @@ public class ImsService {
         String mobileNumber = customerDto.getMobile();
         String username = customerDto.getUsername();
         String password = customerDto.getPassword();
+        String confirmPassword = customerDto.getConfirmPassword(); // New field for password confirmation
 
         boolean isValidEmail = isValidEmail(email);
         boolean isEmailNotRegistered = !checkAlreadyRegistered(email);
         boolean isValidUsername = isValidUsername(username);
         boolean isValidPassword = isValidPassword(password);
+        boolean isPasswordConfirmed = password.equals(confirmPassword); // Check if password matches confirmation
 
         Map<String, Object> userData = new LinkedHashMap<>();
 
@@ -124,31 +139,58 @@ public class ImsService {
             response.put("meta", new LinkedHashMap<>());
             response.put("pagination", new LinkedHashMap<>());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } else if (!isPasswordConfirmed) {
+            userData.put("status_code", 400);
+            userData.put("boolean", false);
+            userData.put("message", "Password and confirmation do not match");
+            dataList.add(userData);
+            response.put("data", dataList);
+            response.put("meta", new LinkedHashMap<>());
+            response.put("pagination", new LinkedHashMap<>());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } else {
+            // Your registration logic
             ImsEntity customerEntity = new ImsEntity();
             customerEntity.setUsername(username);
             customerEntity.setEmail(email);
             customerEntity.setMobile(mobileNumber);
             customerEntity.setPassword(passwordEncoder.encode(password));
+            
+            String jwtToken = generateJwtToken(username);
+            customerEntity.setToken(jwtToken);
+            
             customerRepository.save(customerEntity);
 
             userData.put("userName", customerEntity.getUsername());
+            userData.put("token", customerEntity.getToken());
             userData.put("boolean", true);
             dataList.add(userData);
             
+            User user = new User();
+            user.setEmail(customerDto.getEmail());
+            user.setUsername(customerDto.getUsername());
+            user.setMobile(customerDto.getMobile());
+            emailService.sendMail(user);  
+
             Map<String, Object> meta = new LinkedHashMap<>();
             meta.put("status_code", 200);
             meta.put("message", "Successfully registered");
-            
+
             response.put("data", dataList);
             response.put("meta", meta);
             response.put("pagination", new LinkedHashMap<>());
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
-            
-         
         }
-   
+    }
+    
+    private String generateJwtToken(String username) {
+        SecretKey secretKey = Keys.hmacShaKeyFor(secretKeyProvider.getSecretKey().getBytes());
+
+        return Jwts.builder()
+            .setSubject(username)
+            .signWith(secretKey, SignatureAlgorithm.HS256)
+            .compact();
     }
     
     
@@ -200,23 +242,6 @@ public class ImsService {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
-    
-    
-    public boolean performLogoutAction(String mobile) {
-        try {
-            ImsEntity user = customerRepository.findByMobile(mobile);
-
-            if (user != null) {
-                return true; 
-            } else {
-                return false; 
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false; 
-        }
-    }
-
     
     
     public ResponseEntity<Map<String, Object>> getUserData(int id, String username, String mobile, String email) {
@@ -331,3 +356,4 @@ public class ImsService {
 
 
 }
+

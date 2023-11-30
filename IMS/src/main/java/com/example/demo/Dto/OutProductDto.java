@@ -10,7 +10,7 @@ public class OutProductDto {
 	private String customerMobile;
     private int exitQuantity;
     private String TransactionType;
-    private Date outDate;
+    private LocalDate outDate;
     private boolean isdeleted;
     
     
@@ -44,10 +44,10 @@ public class OutProductDto {
 	public void setTransactionType(String transactionType) {
 		TransactionType = transactionType;
 	}
-	public Date getOutDate() {
+	public LocalDate getOutDate() {
 		return outDate;
 	}
-	public void setOutDate(Date outDate) {
+	public void setOutDate(LocalDate outDate) {
 		this.outDate = outDate;
 	}
 	public boolean isIsdeleted() {

@@ -5,10 +5,13 @@ import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import org.apache.poi.ss.usermodel.*;
@@ -29,11 +32,14 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.example.demo.Entity.ProductInventoryEntity;
+import com.example.demo.Repository.ProductInventoryRepository;
 
 @Service
 public class ProductInventoryReportService  {
 
 	
+	@Autowired
+	ProductInventoryRepository productInventoryRepository;
 	
 	public static void generatePdf(HttpServletResponse response, List<ProductInventoryEntity> findAll) throws IOException, DocumentException {
 	    Document document = new Document();
@@ -48,16 +54,16 @@ public class ProductInventoryReportService  {
 	    document.add(title);
 
 	    // Create a table with 7 columns (excluding Date)
-	    PdfPTable table = new PdfPTable(7);
-	    table.setWidthPercentage(100);
+	    PdfPTable table = new PdfPTable(12);
+	    table.setWidthPercentage(110);
 	    table.setSpacingBefore(10f);
 	    table.setSpacingAfter(10f);
 
 	    // Define column headers
 	    String[] headers = {
-	        "Product ID", "Product Name", "Customer Name",
-	        "Out Date", "Status", "Customer Mobile", "Prices"
-	    };
+		        "Serial Number", "Model Name","Model Type","Processor","Ram","Display size", "Customer Name",
+		        "Out Date","In Date", "Customer Mobile", "Price","Status"
+		    };
 
 	    // Add headers to the table
 	    for (String header : headers) {
@@ -70,30 +76,39 @@ public class ProductInventoryReportService  {
 	    }
 
 	    // SimpleDateFormat for formatting java.sql.Date to a string
-	    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	    // Populate data rows for "out" and "service" transactions
 	    for (ProductInventoryEntity entity : findAll) {
-	        java.util.Date outDate = entity.getOutDate();
+	        LocalDate outDate = entity.getOutDate();
+	        LocalDate InDate = entity.getInDate();
 
 	        table.addCell(entity.getProductId() != null ? entity.getProductId() : "null");
 	        table.addCell(entity.getProductName() != null ? entity.getProductName() : "null");
+	        table.addCell(entity.getProductType() != null ? entity.getProductType() : "null");
+	        table.addCell(entity.getProcessorName() != null ? entity.getProcessorName() : "null");
+	        table.addCell(entity.getRam() != null ? entity.getRam() : "null");
+	        table.addCell(entity.getExpandableMemory() != null ? entity.getExpandableMemory() : "null");
 	        table.addCell(entity.getCustomerName() != null ? entity.getCustomerName() : "null");
 
-	        // Format outDate as a string using SimpleDateFormat
-	        String formattedOutDate = outDate != null ? dateFormat.format(outDate) : "null";
+	        String formattedOutDate = outDate != null ? outDate.format(dateFormatter) : "null";
 	        table.addCell(formattedOutDate);
 
-	        String transactionType = entity.getTransactionType();
+	        String formattedInDate = InDate != null ? InDate.format(dateFormatter) : "null";
+	        table.addCell(formattedInDate);
+
+//	        String transactionType = entity.getTransactionType();
+	        	        
+	        table.addCell(String.valueOf(entity.getCustomerMobile()));
+	        table.addCell(String.valueOf(entity.getPrices()));
 	        
-	        // Replace "out" with "sales" in the transaction type column
+	        String transactionType = entity.getTransactionType();
 	        if ("out".equalsIgnoreCase(transactionType)) {
 	            transactionType = "sales";
 	        }
 	        
 	        table.addCell(transactionType != null ? transactionType : "null");
-	        table.addCell(String.valueOf(entity.getCustomerMobile()));
-	        table.addCell(String.valueOf(entity.getPrices()));
+
 	    }
 
 	    document.add(table);
@@ -105,73 +120,87 @@ public class ProductInventoryReportService  {
 	 
 	 
 	public static void generateExcel(HttpServletResponse response, List<ProductInventoryEntity> findAll) throws IOException {
-        // Create a new Excel workbook
-        Workbook workbook = new XSSFWorkbook();
+	    Workbook workbook = new XSSFWorkbook();
+	    Sheet sheet = workbook.createSheet("Product Inventory");
 
-        // Create a sheet within the workbook
-        Sheet sheet = workbook.createSheet("Inventory Report");
+	    // Create a header row
+	    Row headerRow = sheet.createRow(0);
+	    String[] headers = {
+		        "Serial Number", "Model Name","Model Type","Processor","Ram","Display size", "Customer Name",
+		        "Out Date","In Date", "Customer Mobile", "Price","Status"
+		    };
 
-        // Create a header row
-        Row headerRow = sheet.createRow(0);
-        String[] headers = {
-            "Product ID", "Product Name", "Customer Name",
-            "Out Date", "Transaction Type", "Customer Mobile", "Prices", "Status"
-        };
-        for (int i = 0; i < headers.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(headers[i]);
-        }
+	    CellStyle headerCellStyle = workbook.createCellStyle();
+	    headerCellStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+	    headerCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+	    org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+	    headerFont.setBold(true);
+	    headerCellStyle.setFont(headerFont);
 
-        // SimpleDateFormat for formatting java.sql.Date to a string
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	    for (int i = 0; i < headers.length; i++) {
+	        Cell cell = headerRow.createCell(i);
+	        cell.setCellValue(headers[i]);
+	        cell.setCellStyle(headerCellStyle);
+	    }
 
-        // Populate data rows for "out" transactions only
-        int rowNum = 1;
-        for (ProductInventoryEntity entity : findAll) {
-            if ("out".equalsIgnoreCase(entity.getTransactionType())) {
-                java.util.Date outDate = entity.getOutDate();
+	    // Populate data rows
+	    int rowNum = 1;
+	    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-                Row row = sheet.createRow(rowNum++);
+	    for (ProductInventoryEntity entity : findAll) {
+	        Row row = sheet.createRow(rowNum++);
+	        LocalDate outDate = entity.getOutDate();
+	        LocalDate InDate = entity.getInDate();
 
-                row.createCell(0).setCellValue(entity.getProductId() != null ? entity.getProductId() : "null");
-                row.createCell(1).setCellValue(entity.getProductName() != null ? entity.getProductName() : "null");
-                row.createCell(2).setCellValue(entity.getCustomerName() != null ? entity.getCustomerName() : "null");
+	        row.createCell(0).setCellValue(entity.getProductId() != null ? entity.getProductId() : "null");
+	        row.createCell(1).setCellValue(entity.getProductName() != null ? entity.getProductName() : "null");
+	        row.createCell(2).setCellValue(entity.getProductType() != null ? entity.getProductType() : "null");
+	        row.createCell(3).setCellValue(entity.getProcessorName() != null ? entity.getProcessorName() : "null");
+	        row.createCell(4).setCellValue(entity.getRam() != null ? entity.getRam() : "null");
+	        row.createCell(5).setCellValue(entity.getExpandableMemory() != null ? entity.getExpandableMemory() : "null");
+	        row.createCell(6).setCellValue(entity.getCustomerName() != null ? entity.getCustomerName() : "null");
 
-                // Format outDate as a string using SimpleDateFormat
-                String formattedOutDate = outDate != null ? dateFormat.format(outDate) : "null";
-                row.createCell(3).setCellValue(formattedOutDate);
+	        String formattedOutDate = outDate != null ? dateFormatter.format(outDate) : "null";
+	        row.createCell(7).setCellValue(formattedOutDate);
+	        
+	        String formattedInDate = InDate != null ? dateFormatter.format(InDate) : "null";
+	        row.createCell(8).setCellValue(formattedInDate);
 
-                row.createCell(4).setCellValue(entity.getTransactionType() != null ? entity.getTransactionType() : "null");
-                row.createCell(5).setCellValue(entity.getCustomerMobile());
-                row.createCell(6).setCellValue(entity.getPrices());
+	        row.createCell(9).setCellValue(String.valueOf(entity.getCustomerMobile()));
+	        row.createCell(10).setCellValue(String.valueOf(entity.getPrices()));
 
-                String saleStatus = entity.isIsdeleted() ? "Sale" : "Unsale";
-                row.createCell(7).setCellValue(saleStatus);
-            }
-        }
+	        String transactionType = entity.getTransactionType();
+	        if ("out".equalsIgnoreCase(transactionType)) {
+	            transactionType = "sales";
+	        }
+	        row.createCell(11).setCellValue(transactionType != null ? transactionType : "null");
+	    }
 
-        // Set response headers for Excel download
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        response.setHeader("Content-Disposition", "attachment; filename=inventory_report.xlsx");
+	    // Auto-size columns
+	    for (int i = 0; i < headers.length; i++) {
+	        sheet.autoSizeColumn(i);
+	    }
 
-        // Write the workbook to the response output stream
-        try (ServletOutputStream outputStream = response.getOutputStream()) {
-            workbook.write(outputStream);
-        }
-    }
+	    // Set the content type and headers for the response
+	    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+	    response.setHeader("Content-Disposition", "attachment; filename=ProductInventoryReport.xlsx");
 
-    public static void main(String[] args) throws IOException {
-        List<ProductInventoryEntity> findAll = getInventoryData();
-        generateExcel(null, findAll);
-    }
+	    // Write the workbook to the response output stream
+	    try (OutputStream outputStream = response.getOutputStream()) {
+	        workbook.write(outputStream);
+	        outputStream.close();
+	    }
+	}
 
-    // Replace this with your actual data retrieval logic
-    private static List<ProductInventoryEntity> getInventoryData() {
-        return List.of(
-            new ProductInventoryEntity(),
-            new ProductInventoryEntity()
-        );
-    }
+//    public static void main(String[] args) throws IOException {
+//        List<ProductInventoryEntity> findAll = getInventoryData();
+//        generateExcel(null, findAll);
+//    }
+//
+//    // Replace this with your actual data retrieval logic
+//    private static List<ProductInventoryEntity> getInventoryData() {
+//    	productInventoryRepository.findall();
+//    }
 	 
 	
 }

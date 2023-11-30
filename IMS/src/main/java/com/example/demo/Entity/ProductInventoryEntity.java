@@ -1,7 +1,7 @@
 package com.example.demo.Entity;
 
+
 import java.time.LocalDate;
-import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,6 +20,9 @@ public class ProductInventoryEntity {
 	
 	@Column(name = "productId", unique = true)
 	private String productId;
+	
+	@Column(name="email")
+	private String email;
 	
 	@Column(name="productName")
 	private String productName;
@@ -52,10 +55,10 @@ public class ProductInventoryEntity {
 	private String TransactionType;
 	
 	@Column(name="inDate")
-	private Date inDate;
+	private LocalDate inDate;
 	
 	@Column(name="outDate")
-	private Date outDate;
+	private LocalDate outDate;
 	
 	@Column(name="Description")
 	private String Description;
@@ -172,19 +175,19 @@ public class ProductInventoryEntity {
 		TransactionType = transactionType;
 	}
 
-	public Date getInDate() {
+	public LocalDate getInDate() {
 		return inDate;
 	}
 
-	public void setInDate(Date inDate) {
+	public void setInDate(LocalDate inDate) {
 		this.inDate = inDate;
 	}
 
-	public Date getOutDate() {
+	public LocalDate getOutDate() {
 		return outDate;
 	}
 
-	public void setOutDate(Date outDate) {
+	public void setOutDate(LocalDate outDate) {
 		this.outDate = outDate;
 	}
 
@@ -227,6 +230,15 @@ public class ProductInventoryEntity {
 	public void setIsdeleted(boolean isdeleted) {
 		this.isdeleted = isdeleted;
 	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	
 
 	
 	

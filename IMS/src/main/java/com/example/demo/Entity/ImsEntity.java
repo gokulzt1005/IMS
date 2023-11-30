@@ -26,6 +26,12 @@ public class ImsEntity {
 
 	@Column(name="password")
 	private String password;
+	
+	@Column(name="token")
+	private String token;
+	
+	@Column(name="otp")
+	private String otp;
 
 	public ImsEntity() {
 	}
@@ -68,6 +74,22 @@ public class ImsEntity {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
+
+	public String getOtp() {
+		return otp;
+	}
+
+	public void setOtp(String otp) {
+		this.otp = otp;
 	}
 	
 	

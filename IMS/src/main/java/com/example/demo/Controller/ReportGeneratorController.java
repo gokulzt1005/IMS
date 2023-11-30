@@ -40,12 +40,13 @@ public class ReportGeneratorController {
   
     @GetMapping("/pdf")
     public void generateProductInventoryPdf(
+    		@RequestParam("email") String email,
             @RequestParam("year") int year,
             @RequestParam("month") int month,
             HttpServletResponse response) throws IOException, DocumentException {
     	
         Month reportMonth = Month.of(month);
-        List<ProductInventoryEntity> filteredData = productRepository.findByYearAndMonth(year, month);
+        List<ProductInventoryEntity> filteredData = productRepository.findByYearAndMonthAndEmail(year, month,email);
         response.setContentType(MediaType.APPLICATION_PDF_VALUE);
         String filename = "monthly_inventory_report_" + reportMonth + "_" + year + ".pdf";
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename);
@@ -56,11 +57,13 @@ public class ReportGeneratorController {
     @GetMapping("/excel")
     public void generateProductInventoryExcel(
             @RequestParam("year") int year,
+            @RequestParam("email") String email,
             @RequestParam("month") int month,
             HttpServletResponse response) throws IOException {
-        List<ProductInventoryEntity> filteredData = productRepository.findByYearAndMonth(year, month);
+        List<ProductInventoryEntity> filteredData = productRepository.findByYearAndMonthAndEmail(year, month,email);
         ReportService.generateExcel(response, filteredData);
     }
+
 
 	
 }	

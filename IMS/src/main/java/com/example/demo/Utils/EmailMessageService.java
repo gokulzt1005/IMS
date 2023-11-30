@@ -43,12 +43,12 @@ public class EmailMessageService {
 	        Context context = new Context();
 	        context.setVariable("user", user);
 	        
-	        String message = "Successfully Registered\n\n" +
-                    "NAME: " + user.getUsername() + "\n" +
-                    "EMAIL: " + user.getEmail() + "\n" +
-                    "MOBILE NUMBER: " + user.getMobile() + "\n\n" +
-                    "Successful registration, an email has been sent to your email address for verification\n\n" +
-                    "Best regards,\n" +
+	        String message = "Successfully Registered<br>" +
+                    "NAME: " + user.getUsername() + "<br>" +
+                    "EMAIL: " + user.getEmail() + "<br>" +
+                    "MOBILE NUMBER: " + user.getMobile() + "<br>" +
+                    "Successful registration, an email has been sent to your email address for verification<br>" +
+                    "Best regards,<br>" +
                     "Inventory Management Services";
 	        
 	        javax.mail.internet.MimeMessage mimeMessage = javaMailSender.createMimeMessage();

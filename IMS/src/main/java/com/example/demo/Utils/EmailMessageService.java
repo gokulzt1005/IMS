@@ -42,11 +42,19 @@ public class EmailMessageService {
     	try {
 	        Context context = new Context();
 	        context.setVariable("user", user);
-	        String process = templateEngine.process("Successfully registered <br>"+"NAME : " + user.getUsername() + "<br>" +"EMAIL : "+ user.getEmail() + "<br>"+"MOBILE NUMBER : " + user.getMobile()+"<br>"+"successful registration, an email has been sent to your email address for verification", context);
+	        
+	        String message = "Successfully Registered\n\n" +
+                    "NAME: " + user.getUsername() + "\n" +
+                    "EMAIL: " + user.getEmail() + "\n" +
+                    "MOBILE NUMBER: " + user.getMobile() + "\n\n" +
+                    "Successful registration, an email has been sent to your email address for verification\n\n" +
+                    "Best regards,\n" +
+                    "Inventory Management Services";
+	        
 	        javax.mail.internet.MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 	        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage);
 	        helper.setSubject("Welcome To Inventory Management System " + user.getUsername());
-	        helper.setText(process, true);
+	        helper.setText(message, true);
 	        helper.setTo(user.getEmail());
 	        javaMailSender.send(mimeMessage);
     	}catch(Exception e) {
